@@ -1,23 +1,73 @@
-import Gameboard from "../modules/gameboard.js";
-import Ship from "../modules/ship.js";
+import Gameboard from "./modules/gameboard.js";
+import Game from "./modules/gamehandler.js";
+import Ship from "./modules/ship.js";
+import Player from "./modules/player.js";
+import DomManager from "./modules/dommanager.js";
+import { randomGenerator } from "./utils/randomfieldgenerator.js";
+import "./styles.css";
 
+let dommanager = new DomManager();
+let game = new Game();
 let gameboard = new Gameboard();
+let computerBoard = new Gameboard();
+let player = new Player(gameboard);
+let computer = new Player(computerBoard);
 
-let ship1 = new Ship(1, 77);
-let ship2 = new Ship(5, 24);
-let ship3 = new Ship(3, 44);
-let ship4 = new Ship(3, 22);
-let ship5 = new Ship(1, 20);
-let ship6 = new Ship(1, 58);
+let randomizeBtn = document.querySelector("#random");
+let resetBtn = document.querySelector("#reset");
+let startBtn = document.querySelector("#start");
 
-ship1.changeDirection();
-ship4.changeDirection();
-console.log(ship5);
+randomizeBtn.addEventListener("click", () => {
+  gameboard.clear();
+  randomGenerator(gameboard);
+  dommanager.updateBoard(gameboard, "player");
+})
 
-gameboard.placeShip(ship1);
-gameboard.placeShip(ship2);
-gameboard.placeShip(ship3);
-gameboard.placeShip(ship4);
-gameboard.placeShip(ship5);
-gameboard.placeShip(ship6);
-gameboard.showBoard(gameboard.board);
+resetBtn.addEventListener("click", () => {
+  game.stopGame(gameboard, computerBoard, dommanager);
+})
+
+startBtn.addEventListener("click", () => {
+  let computerDOMBoard = document.querySelector(".player-2-gameboard");
+
+  function removeAllListeners() {
+    computerDOMBoard.childNodes.forEach(node => {
+      node.childNodes.forEach(field => {
+        field.removeEventListener("click", handleClick);
+      });
+    });
+  }
+
+  function handleClick(e) {
+    let winner = document.querySelector(".winner");
+    let result = game.playRound(player, computer, e);
+
+    if (result == false) {
+      winner.textContent = "Computer win! Reset?";
+      removeAllListeners();
+    }
+
+    if (result == true) {
+      winner.textContent = "Player win! Reset?";
+      removeAllListeners();
+    }
+  }
+
+  computerDOMBoard.childNodes.forEach(node => {
+    node.childNodes.forEach(field => {
+      field.addEventListener("click", handleClick);
+    });
+  });
+
+  startBtn.disabled = true;
+  randomizeBtn.disabled = true;
+  resetBtn.disabled = false;
+});
+
+randomGenerator(computerBoard);
+randomGenerator(gameboard);
+
+dommanager.createInitBoard(gameboard, "player");
+dommanager.createInitBoard(computerBoard, "computer");
+dommanager.updateBoard(gameboard, "player");
+dommanager.updateBoard(computerBoard, "computer");
