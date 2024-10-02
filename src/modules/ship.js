@@ -1,26 +1,41 @@
 export default class Ship {
   static instanceCount = 0;
 
-  constructor(length, position) {
+  constructor(length, position, align) {
     this.id = ++Ship.instanceCount;
-    this.align = "horizontal";
+    this.align = align;
     this.length = length;
     this.hits = 0;
-    this.coords = this.getCoords(position);
+    this.coords = this.getCoords(position, align);
     this.borders = this.getBorders(this.coords);
+    this.hitCoords = [];
   };
 
-  getCoords(position) {
+  getCoords(position, align) {
     if (this.length == 1) return [position];
-    if (!this._checkLengthHorizontal(position)) return null;
+    if (align == "horizontal") {
 
-    let arr = [];
+      if (!this._checkLengthHorizontal(position)) return false;
+      let arr = [];
 
-    for (let i = 0; i < this.length; i++) {
-      arr.push(position + i);
+      for (let i = 0; i < this.length; i++) {
+        arr.push(position + i);
+      }
+
+      return arr;
     }
 
-    return arr;
+    if (align == "vertical") {
+      if (!this._checkLengthVertical(position)) return false;
+      let arr = [];
+      arr.push(position)
+
+      for (let i = 1; i < this.length; i++) {
+        arr.push(position + i * 10);
+      }
+
+      return arr;
+    }
   }
 
   changeDirection() {
@@ -119,7 +134,7 @@ export default class Ship {
     if (position % 10 == 0 || this.length == 1) return true;
 
     if (position + this.length > this.getRow(position) * 10 + 10) {
-      throw new Error("length > available space");
+      return false;
     } else {
       return true;
     }
@@ -130,7 +145,7 @@ export default class Ship {
     if (position % 10 == 0 || this.length == 1) return true;
 
     if (this.getRow(position) + this.length > 10) {
-      throw new Error("length > available space");
+      return false;
     } else {
       return true;
     }
